@@ -1,0 +1,11 @@
+# 網站伺服器
+fastapi
+uvicorn[standard]
+
+# 影像 / AI 推論（全部 CPU 即可，不需要顯示卡）
+numpy
+pillow
+onnxruntime
+rapidocr_onnxruntime      # 本機 OCR，支援繁簡中文
+huggingface_hub
+hf_xet

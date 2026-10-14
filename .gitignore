@@ -1,0 +1,34 @@
+# ===== 機密：金鑰、憑證、部署結果（含 AWS 帳號 ID 與網址） =====
+**/deploy/.secrets
+**/deploy/outputs.env
+quick_start/credentials.txt
+quick_start/urls.txt
+.env
+*.pem
+
+# 部署時自動產生（內含實際的 API 網址）
+frontend/config.js
+
+# ===== 建置產物與本機執行資料 =====
+build/
+**/build/
+.venv/
+venv/
+__pycache__/
+*.pyc
+ZZZ_proxy_hub/data/
+ZZZ_proxy_hub/models/
+*.log
+
+# ===== 課堂用（入口網站含組員姓名、學號、照片；不屬於網站本身） =====
+portal/
+class_quick_start/
+docs/presentation.md
+docs/awesome_style.md
+
+# ===== 編輯器 / 系統 =====
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db

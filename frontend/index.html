@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZZZ Proxy Hub｜絕區零玩家工具站</title>
+  <meta name="description" content="絕區零抽卡紀錄分析、驅動盤評分、配隊資料庫與 HoYoLAB 自動簽到">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="config.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js" integrity="sha384-Ftcjj/GNLxPvzNDftO/oryXB9aGxsGZY9JGqsXG0uUKgQDl9RfDgsx9NJ/4IVNPe" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">ZZZ</span>
+      <div>
+        <div class="brand-title">PROXY HUB</div>
+        <div class="brand-sub">絕區零玩家工具站</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="gacha" class="active">抽卡分析</button>
+      <button data-tab="disc">驅動盤評分</button>
+      <button data-tab="depth">2.5D 立繪</button>
+      <button data-tab="model3d">3D 模型</button>
+      <button data-tab="teams">角色與配隊</button>
+      <button data-tab="checkin">HoYoLAB 簽到</button>
+      <button data-tab="bot">Discord / 設定</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ================= 抽卡分析 ================= -->
+    <section id="tab-gacha" class="tab active">
+      <div class="grid two">
+        <div class="card">
+          <h2><span class="tag">方法 1</span>貼上調頻紀錄網址（推薦）</h2>
+          <ol class="steps">
+            <li>在遊戲中打開「調頻 → 紀錄」頁面</li>
+            <li>用 PowerShell 執行下面的指令，網址會自動複製到剪貼簿
+              <div class="code-row"><code id="ps-cmd">載入中…</code><button class="btn ghost sm" data-copy="ps-cmd">複製</button></div>
+            </li>
+            <li>把網址貼到下面，按「匯入」</li>
+          </ol>
+          <textarea id="gacha-url" rows="3" placeholder="https://public-operation-nap-sg.hoyoverse.com/common/gacha_record/api/getGachaLog?authkey=..."></textarea>
+          <button class="btn primary" id="btn-import-url">匯入</button>
+          <div class="status" id="import-status"></div>
+        </div>
+
+        <div class="card">
+          <h2><span class="tag">方法 2</span>上傳紀錄截圖（AWS Textract OCR）</h2>
+          <p class="muted">Textract 目前不支援中文，請先把<b>遊戲語言切換為英文</b>再截圖。辨識結果可以手動修正後再匯入。</p>
+          <div class="row">
+            <select id="ocr-gacha-type">
+              <option value="2">獨家頻段</option>
+              <option value="3">音擎頻段</option>
+              <option value="1">常駐頻段</option>
+              <option value="5">邦布頻段</option>
+            </select>
+            <label class="btn ghost file-btn">選擇截圖<input type="file" id="ocr-gacha-file" accept="image/png,image/jpeg" hidden></label>
+          </div>
+          <div class="status" id="ocr-gacha-status"></div>
+          <div id="ocr-gacha-result"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>我的抽卡統計</h2>
+          <div class="row">
+            <button class="btn ghost sm" id="btn-refresh-stats">重新整理</button>
+            <button class="btn danger sm" id="btn-clear-pulls">清除我的紀錄</button>
+          </div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+        <div class="channel-tabs" id="channel-tabs"></div>
+        <div id="channel-detail"></div>
+      </div>
+
+      <div class="card">
+        <h2>全服統計 <span class="muted small" id="global-players"></span></h2>
+        <div class="global-grid" id="global-stats"></div>
+      </div>
+    </section>
+
+    <!-- ================= 驅動盤評分 ================= -->
+    <section id="tab-disc" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>驅動盤資料</h2>
+          <div class="row">
+            <label class="btn ghost file-btn">上傳驅動盤截圖自動填入<input type="file" id="ocr-disc-file" accept="image/png,image/jpeg" hidden></label>
+          </div>
+          <div class="status" id="ocr-disc-status"></div>
+          <div class="form">
+            <label>給哪位代理人用<select id="disc-char"></select></label>
+            <label>位置<select id="disc-slot">
+              <option value="1">1 號位</option><option value="2">2 號位</option><option value="3">3 號位</option>
+              <option value="4">4 號位</option><option value="5">5 號位</option><option value="6">6 號位</option>
+            </select></label>
+            <label>主詞條<select id="disc-main"></select></label>
+          </div>
+          <h3>副詞條</h3>
+          <div id="disc-subs"></div>
+          <button class="btn primary" id="btn-score">計算分數</button>
+        </div>
+        <div class="card" id="disc-result">
+          <h2>評分結果</h2>
+          <p class="muted">輸入詞條後按「計算分數」。<br>評分方式：每條副詞條換算成「強化次數」，再乘上該角色的詞條權重，加總為<b>有效詞條數</b>（滿分 9）。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2.5D 立繪 ================= -->
+    <section id="tab-depth" class="tab">
+      <div class="depth-layout">
+        <div class="card">
+          <h2>2D 立繪 → 2.5D 動態</h2>
+          <p class="muted">上傳一張立繪，AWS Lambda 會用 AI 模型 <b>Depth Anything V2</b> 估計每個像素的深度，再由瀏覽器的 WebGL 依深度做視差位移，讓平面圖片「立體」起來。</p>
+          <ul class="tips">
+            <li>正面、主體清楚的角色圖效果最好</li>
+            <li>去背的 PNG 會保留透明背景</li>
+            <li>PNG / JPEG / WebP，10MB 以內</li>
+          </ul>
+          <div class="form">
+            <label>作品名稱<input id="depth-title" maxlength="40" placeholder="例：星見雅 新春立繪"></label>
+            <label class="switch"><input type="checkbox" id="depth-public"> 公開到畫廊</label>
+          </div>
+          <label class="btn primary file-btn">選擇圖片並生成<input type="file" id="depth-file" accept="image/png,image/jpeg,image/webp" hidden></label>
+          <div class="status" id="depth-status"></div>
+          <p class="muted small">請只上傳你有權使用的圖片。公開作品會出現在畫廊，任何人都看得到。</p>
+        </div>
+
+        <div class="card viewer-card">
+          <div class="card-head">
+            <h2 id="viewer-title">預覽</h2>
+            <div class="row">
+              <button class="btn ghost sm" id="btn-share" disabled>複製分享連結</button>
+              <button class="btn ghost sm" id="btn-record" disabled>下載動態影片</button>
+            </div>
+          </div>
+          <div class="viewer" id="viewer">
+            <canvas id="depth-canvas"></canvas>
+            <div class="viewer-empty" id="viewer-empty">上傳圖片或從下方選一張作品</div>
+          </div>
+          <div class="controls">
+            <label>動態模式
+              <select id="ctl-mode">
+                <option value="mouse">滑鼠 / 手指</option>
+                <option value="auto">自動擺動</option>
+                <option value="gyro">手機陀螺儀</option>
+              </select>
+            </label>
+            <label>立體強度 <input type="range" id="ctl-strength" min="0" max="0.12" step="0.005" value="0.04"></label>
+            <label>焦點深度 <input type="range" id="ctl-focus" min="0" max="1" step="0.05" value="0.5"></label>
+            <label class="switch"><input type="checkbox" id="ctl-depth"> 顯示深度圖</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>作品</h2>
+          <div class="channel-tabs" style="margin:0">
+            <button data-gal="mine" class="active">我的作品</button>
+            <button data-gal="public">公開畫廊</button>
+          </div>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+    </section>
+
+    <!-- ================= 3D 模型 ================= -->
+    <section id="tab-model3d" class="tab">
+      <div class="depth-layout">
+        <div class="card">
+          <h2>2D 圖片 → 3D 模型 <span class="tag">BETA</span></h2>
+          <p class="muted">由 EC2 上的 AI 模型 <b>TripoSR</b> 從單張圖片推測完整的 3D 形狀與顏色，輸出可旋轉、可下載的 GLB 模型，手機還能用 AR 擺在桌上看。</p>
+          <div class="worker-status" id="worker-status">
+            <span class="dot"></span><span id="worker-text">查詢運算主機狀態…</span>
+          </div>
+          <ul class="tips">
+            <li>主體完整、姿勢簡單的<b>正面全身圖</b>效果最好，有去背更好</li>
+            <li>背面是 AI 推測的，二次元圖的背面和細節會比較粗糙</li>
+            <li>運算主機沒有 GPU，每個模型約 1～3 分鐘；閒置時會自動關機省錢，喚醒需要 2～3 分鐘</li>
+          </ul>
+          <div class="form">
+            <label>模型名稱<input id="m3d-title" maxlength="40" placeholder="例：邦布公仔"></label>
+            <label class="switch"><input type="checkbox" id="m3d-public"> 公開到畫廊</label>
+          </div>
+          <label class="btn primary file-btn">選擇圖片並生成<input type="file" id="m3d-file" accept="image/png,image/jpeg,image/webp" hidden></label>
+          <div class="status" id="m3d-status"></div>
+          <div class="steps-bar" id="m3d-steps"></div>
+        </div>
+
+        <div class="card viewer-card">
+          <div class="card-head">
+            <h2 id="m3d-viewer-title">3D 預覽</h2>
+            <div class="row">
+              <button class="btn ghost sm" id="btn-m3d-share" disabled>複製分享連結</button>
+              <a class="btn ghost sm" id="btn-m3d-download" download aria-disabled="true">下載 GLB</a>
+            </div>
+          </div>
+          <div class="viewer model-viewer-wrap">
+            <model-viewer id="m3d-viewer" camera-controls auto-rotate shadow-intensity="1" exposure="1.1"
+              ar ar-modes="webxr scene-viewer quick-look" touch-action="pan-y" alt="3D 模型預覽"></model-viewer>
+            <div class="viewer-empty" id="m3d-empty">上傳圖片或從下方選一個模型</div>
+          </div>
+          <div class="muted small" id="m3d-meta" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>3D 作品</h2>
+          <div class="channel-tabs" style="margin:0">
+            <button data-gal3d="mine" class="active">我的模型</button>
+            <button data-gal3d="public">公開畫廊</button>
+          </div>
+        </div>
+        <div class="gallery" id="gallery3d"></div>
+      </div>
+    </section>
+
+    <!-- ================= 角色與配隊 ================= -->
+    <section id="tab-teams" class="tab">
+      <div class="card">
+        <div class="card-head">
+          <h2>代理人資料庫</h2>
+          <div class="row">
+            <select id="filter-element"><option value="">全部屬性</option></select>
+            <select id="filter-specialty"><option value="">全部特性</option></select>
+            <select id="filter-rank"><option value="">全部稀有度</option><option>S</option><option>A</option></select>
+          </div>
+        </div>
+        <div class="agent-grid" id="agent-grid"></div>
+      </div>
+      <div class="grid two">
+        <div class="card">
+          <h2>配隊排行榜</h2>
+          <div id="team-list"></div>
+        </div>
+        <div class="card">
+          <h2>分享你的配隊</h2>
+          <div class="form">
+            <label>隊伍名稱<input id="team-name" maxlength="30" placeholder="例：雅柳紊亂隊"></label>
+            <label>成員 1<select class="team-member"></select></label>
+            <label>成員 2<select class="team-member"></select></label>
+            <label>成員 3<select class="team-member"></select></label>
+            <label>心得<textarea id="team-note" rows="3" maxlength="200" placeholder="手法、驅動盤、音擎建議…"></textarea></label>
+          </div>
+          <button class="btn primary" id="btn-create-team">送出配隊</button>
+          <div class="status" id="team-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= HoYoLAB 簽到 ================= -->
+    <section id="tab-checkin" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>自動簽到設定</h2>
+          <p class="muted">每天 <b>00:10（台灣時間）</b>由 AWS EventBridge 自動觸發 Lambda 幫你在 HoYoLAB 簽到領獎勵。</p>
+          <details class="howto">
+            <summary>如何取得 HoYoLAB Cookie？</summary>
+            <ol>
+              <li>用電腦瀏覽器登入 <a href="https://www.hoyolab.com" target="_blank" rel="noopener">hoyolab.com</a></li>
+              <li>按 F12 → Application（應用程式）→ Cookies → https://www.hoyolab.com</li>
+              <li>找到 <code>ltoken_v2</code>、<code>ltuid_v2</code>（以及 <code>ltmid_v2</code>），照格式貼上：<br><code>ltoken_v2=v2_xxx; ltuid_v2=12345678; ltmid_v2=xxx</code></li>
+            </ol>
+            <p class="warn">⚠ Cookie 等同於登入憑證，只會用來簽到，系統只保留簽到需要的欄位且不會回傳給前端。請勿在不信任的網站貼上。</p>
+          </details>
+          <div class="form">
+            <label>HoYoLAB Cookie<textarea id="hl-cookie" rows="3" placeholder="ltoken_v2=...; ltuid_v2=...; ltmid_v2=..."></textarea></label>
+            <label>Discord Webhook（選填，簽到結果通知）<input id="hl-webhook" placeholder="https://discord.com/api/webhooks/..."></label>
+            <label class="switch"><input type="checkbox" id="hl-enabled" checked> 每天自動簽到</label>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btn-hl-save">儲存</button>
+            <button class="btn ghost" id="btn-hl-run">立即簽到</button>
+            <button class="btn danger" id="btn-hl-delete">刪除設定</button>
+          </div>
+          <div class="status" id="hl-status"></div>
+        </div>
+        <div class="card">
+          <h2>簽到狀態</h2>
+          <div id="hl-info"><p class="muted">尚未設定。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Discord / 設定 ================= -->
+    <section id="tab-bot" class="tab">
+      <div class="grid two">
+        <div class="card">
+          <h2>綁定 Discord Bot</h2>
+          <p class="muted">產生 6 碼綁定碼（10 分鐘內有效），在 Discord 對 Bot 輸入 <code>/link 綁定碼</code>，之後就能在 Discord 查詢抽卡紀錄、請 AI 分析運氣、手動簽到。</p>
+          <button class="btn primary" id="btn-linkcode">產生綁定碼</button>
+          <div class="linkcode" id="linkcode"></div>
+          <div class="muted small" id="discord-status"></div>
+        </div>
+        <div class="card">
+          <h2>我的身分</h2>
+          <p class="muted">本站不需要註冊，你的資料以瀏覽器裡的「存取 Token」識別。換電腦時，把 Token 複製過去即可。</p>
+          <div class="form">
+            <label>Profile ID<input id="me-pid" readonly></label>
+            <label>存取 Token（請勿外流）
+              <div class="code-row"><input id="me-token" type="password" readonly><button class="btn ghost sm" id="btn-show-token">顯示</button><button class="btn ghost sm" data-copy="me-token">複製</button></div>
+            </label>
+            <label>還原其他裝置的 Token<div class="code-row"><input id="restore-token" placeholder="貼上 Token"><button class="btn ghost sm" id="btn-restore">還原</button></div></label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Discord Bot API（給 Bot 開發者）</h2>
+        <p class="muted">所有請求需帶 Header <code>X-Bot-Key</code>（部署時產生，存放於伺服器端）。完整文件見專案 <code>docs/discord_bot_api.md</code>。</p>
+        <table class="api-table">
+          <thead><tr><th>方法</th><th>路徑</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td>POST</td><td>/api/bot/link</td><td>以綁定碼綁定 Discord 使用者</td></tr>
+            <tr><td>GET</td><td>/api/bot/users/{discord_id}/summary</td><td>抽卡統計 + 給 AI 的 <code>llm_context</code> 摘要</td></tr>
+            <tr><td>GET</td><td>/api/bot/users/{discord_id}/pulls</td><td>抽卡明細（gacha_type / rank / limit）</td></tr>
+            <tr><td>GET / POST</td><td>/api/bot/users/{discord_id}/checkin</td><td>查詢 / 觸發 HoYoLAB 簽到</td></tr>
+            <tr><td>GET</td><td>/api/bot/global</td><td>全服統計</td></tr>
+          </tbody>
+        </table>
+        <div class="muted small">API Base：<code id="api-base"></code></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    非官方粉絲工具，與 miHoYo / HoYoverse 無關。「絕區零」相關名稱與素材版權屬於原權利人。
+    <br>Powered by AWS S3 · API Gateway · Lambda · DynamoDB · Textract · EventBridge
+  </footer>
+  <div class="toast" id="toast"></div>
+  <script src="parallax.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
