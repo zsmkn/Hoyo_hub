@@ -7,7 +7,7 @@ set -euo pipefail
 if grep -qi microsoft /proc/version 2>/dev/null; then
   echo "這是 WSL 的 bash，請改用 Git Bash 執行，例如在 PowerShell 輸入：" >&2
   echo '  & "C:\Program Files\Git\bin\bash.exe" '"$0" >&2
-  echo "或直接雙擊 quick_start\deploy.bat" >&2
+  echo "或直接雙擊 quick_deploy_aws\deploy.bat" >&2
   exit 1
 fi
 command -v aws >/dev/null || { echo "找不到 AWS CLI，請先安裝：https://aws.amazon.com/cli/" >&2; exit 1; }

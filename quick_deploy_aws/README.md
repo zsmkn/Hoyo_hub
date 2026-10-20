@@ -17,12 +17,12 @@
 
 1. 到 Learner Lab 按 **Start Lab**，等左上角變綠燈
 2. 按 **AWS Details** → AWS CLI 旁的 **Show**，把整段文字（`[default]` 開頭那三行）複製起來
-3. 雙擊 **`quick_start\deploy.bat`**，看到提示時貼上，按兩次 Enter
+3. 雙擊 **`quick_deploy_aws\deploy.bat`**，看到提示時貼上，按兩次 Enter
 
-   也可以先把那段文字存成 `quick_start\credentials.txt`（格式見 `credentials.example.txt`），
+   也可以先把那段文字存成 `quick_deploy_aws\credentials.txt`（格式見 `credentials.example.txt`），
    腳本會自動匯入，匯入後刪除檔案。
 
-完成後網址會顯示在畫面上，也會存在 `quick_start\urls.txt`。
+完成後網址會顯示在畫面上，也會存在 `quick_deploy_aws\urls.txt`。
 
 | | 第一次 | 之後重跑 |
 |---|---|---|
@@ -41,10 +41,10 @@
 ## 選項
 
 ```bash
-bash quick_start/deploy_all.sh --hub-only   # 只部署主站，跳過 3D 建模站（省時間、也不會建立 EC2）
+bash quick_deploy_aws/deploy_all.sh --hub-only   # 只部署主站，跳過 3D 建模站（省時間、也不會建立 EC2）
 ```
 
-在 PowerShell 裡請用 `quick_start\deploy.bat --hub-only`。
+在 PowerShell 裡請用 `quick_deploy_aws\deploy.bat --hub-only`。
 
 ## 常見問題
 
@@ -52,7 +52,7 @@ bash quick_start/deploy_all.sh --hub-only   # 只部署主站，跳過 3D 建模
 在 PowerShell 打 `bash` 會叫到 WSL 的 bash，裡面沒有 Windows 版的 AWS CLI。
 請改用 `deploy.bat`，或在 PowerShell 執行：
 ```powershell
-& "C:\Program Files\Git\bin\bash.exe" quick_start/deploy_all.sh
+& "C:\Program Files\Git\bin\bash.exe" quick_deploy_aws/deploy_all.sh
 ```
 
 **`憑證無效` / `ExpiredToken`**

@@ -57,7 +57,7 @@
 
         <div class="card">
           <h2><span class="tag">方法 2</span>上傳紀錄截圖（<span class="where">本機</span> OCR）</h2>
-          <p class="muted">使用<span class="where">本機</span> RapidOCR 辨識，<b>支援繁體中文、簡體中文與英文介面</b>，遊戲語言不用切換。辨識結果可以手動修正後再匯入。</p>
+          <p class="muted" id="ocr-desc">使用<span class="where">本機</span> RapidOCR 辨識，<b>支援繁體中文、簡體中文與英文介面</b>，遊戲語言不用切換。辨識結果可以手動修正後再匯入。</p>
           <div class="row">
             <select id="ocr-gacha-type"></select>
             <label class="btn ghost file-btn">選擇截圖<input type="file" id="ocr-gacha-file" accept="image/png,image/jpeg" hidden></label>
@@ -132,7 +132,7 @@
       <div class="depth-layout">
         <div class="card">
           <h2>2D 立繪 → 2.5D 動態</h2>
-          <p class="muted">上傳一張立繪，<span class="where">本機</span>會用 AI 模型 <b>Depth Anything V2</b> 估計每個像素的深度，再由瀏覽器的 WebGL 依深度做視差位移，讓平面圖片「立體」起來。三款遊戲共用同一個作品庫。</p>
+          <p class="muted" id="depth-desc">上傳一張立繪，<span class="where">本機</span>會用 AI 模型 <b>Depth Anything V2</b> 估計每個像素的深度，再由瀏覽器的 WebGL 依深度做視差位移，讓平面圖片「立體」起來。三款遊戲共用同一個作品庫。</p>
           <ul class="tips">
             <li>正面、主體清楚的角色圖效果最好</li>
             <li>去背的 PNG 會保留透明背景</li>

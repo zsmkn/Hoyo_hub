@@ -1,0 +1,57 @@
+# HoYo Proxy Hub — Cloudflare Workers 設定範本
+# 部署腳本（quick_deploy_cloudflare/deploy_all.sh）會填入 __D1_ID__、__KV_ID__ 產生 wrangler.toml（已在 .gitignore）
+name = "hoyo-hub"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# 靜態網頁：部署時由 ZZZ_proxy_hub/frontend 複製到 build/cloudflare/site
+# /api、/gallery、.ps1 交給 Worker，其他路徑直接回傳靜態檔案
+[assets]
+directory = "../../build/cloudflare/site"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/gallery/*", "/get_gacha_url*"]
+
+# 資料庫（取代 DynamoDB；資料表與本機版 SQLite 相同）
+[[d1_databases]]
+binding = "DB"
+database_name = "hoyo-hub"
+database_id = "__D1_ID__"
+
+# 作品檔案與上傳暫存（取代 S3）
+[[kv_namespaces]]
+binding = "FILES"
+id = "__KV_ID__"
+
+# 背景工作（取代 Lambda 非同步呼叫）：一次一則，免費方案每次執行最多 50 個對外請求
+[[queues.producers]]
+binding = "JOBS"
+queue = "hoyo-hub-jobs"
+
+[[queues.consumers]]
+queue = "hoyo-hub-jobs"
+max_batch_size = 1
+max_batch_timeout = 1
+max_retries = 0
+
+# OCR（取代 RapidOCR）
+[ai]
+binding = "AI"
+
+# 每小時自動簽到（取代 EventBridge）
+[triggers]
+crons = ["10 * * * *"]
+
+# 限流（取代 API Gateway throttling）
+[[ratelimits]]
+name = "API_LIMIT"
+namespace_id = "1001"
+simple = { limit = 300, period = 10 }
+
+[[ratelimits]]
+name = "PING_LIMIT"
+namespace_id = "1002"
+simple = { limit = 20, period = 10 }
+
+[observability]
+enabled = true

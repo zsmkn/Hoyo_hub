@@ -2,12 +2,12 @@
 # 一鍵部署到 AWS Academy Learner Lab：3D 建模站 + 主站
 #   1. 3D 建模站（deploy/deploy.sh）：舊的絕區零雲端版，提供 3D 建模與配隊推薦
 #   2. 主站（ZZZ_proxy_hub/deploy/deploy_aws.sh）：絕區零 / 原神 / 星穹鐵道
-# 用法：雙擊 quick_start\deploy.bat，或在 Git Bash 執行  bash quick_start/deploy_all.sh [--hub-only]
+# 用法：雙擊 quick_deploy_aws\deploy.bat，或在 Git Bash 執行  bash quick_deploy_aws/deploy_all.sh [--hub-only]
 #   --hub-only   只部署主站（跳過 3D 建模站；主站的「3D 建模 ↗」連結會沿用上次的網址，沒有就不顯示）
 # 可重複執行：已存在的資源會更新而不是重建。
 set -euo pipefail
 if grep -qi microsoft /proc/version 2>/dev/null; then
-  echo "這是 WSL 的 bash，請改用 Git Bash 執行，或直接雙擊 quick_start\\deploy.bat" >&2
+  echo "這是 WSL 的 bash，請改用 Git Bash 執行，或直接雙擊 quick_deploy_aws\\deploy.bat" >&2
   exit 1
 fi
 export MSYS_NO_PATHCONV=1
@@ -17,7 +17,7 @@ export AWS_PAGER=""
 export PYTHONIOENCODING=utf-8
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
-QS=quick_start
+QS=quick_deploy_aws
 HUB_ONLY=0
 for a in "$@"; do
   case "$a" in
@@ -65,9 +65,9 @@ creds_ok() { aws sts get-caller-identity --query Account --output text 2>/dev/nu
 if [ -f "$QS/credentials.txt" ]; then
   if import_creds "$(cat "$QS/credentials.txt")"; then
     rm -f "$QS/credentials.txt"   # 匯入後刪掉，避免金鑰留在專案資料夾
-    ok "已從 quick_start/credentials.txt 匯入（檔案已刪除）"
+    ok "已從 quick_deploy_aws/credentials.txt 匯入（檔案已刪除）"
   else
-    die "quick_start/credentials.txt 格式不對，請貼上 Learner Lab「AWS Details → AWS CLI」的整段文字"
+    die "quick_deploy_aws/credentials.txt 格式不對，請貼上 Learner Lab「AWS Details → AWS CLI」的整段文字"
   fi
 fi
 ACCOUNT=$(creds_ok || true)
@@ -83,7 +83,7 @@ if [ -z "$ACCOUNT" ] && [ -t 0 ]; then
   import_creds "$PASTED" || die "沒有讀到 aws_access_key_id / aws_secret_access_key / aws_session_token"
   ACCOUNT=$(creds_ok || true)
 fi
-[ -n "$ACCOUNT" ] || die "憑證無效。請確認 Lab 已經 Start（左上角綠燈），再把新的憑證放進 quick_start/credentials.txt 重跑"
+[ -n "$ACCOUNT" ] || die "憑證無效。請確認 Lab 已經 Start（左上角綠燈），再把新的憑證放進 quick_deploy_aws/credentials.txt 重跑"
 aws iam get-role --role-name LabRole >/dev/null 2>&1 || die "帳號 $ACCOUNT 沒有 LabRole，這看起來不是 Learner Lab 帳號"
 ok "AWS 帳號 $ACCOUNT（$AWS_DEFAULT_REGION）"
 
@@ -134,4 +134,4 @@ EOF
 printf '\n\033[1;32m══════════ 部署完成（%d 分 %d 秒）══════════\033[0m\n' $((ELAPSED / 60)) $((ELAPSED % 60))
 sed '1d' "$QS/urls.txt" | sed 's/^/  /'
 echo
-echo "  網址也存在 quick_start/urls.txt"
+echo "  網址也存在 quick_deploy_aws/urls.txt"

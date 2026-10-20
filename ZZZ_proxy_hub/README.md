@@ -50,6 +50,28 @@ bash deploy/deploy_aws.sh        # 預設使用 AWS CLI profile「learnerlab」
 - API Gateway 限流：全站每秒 50 個請求（瞬間 100）；`GET /api/ping` 限每秒 2 個，可用來測試限流（429）
 - 環境變數 `HUB_GAMES`（提供哪些遊戲）、`HUB_LINKS`（某款遊戲分頁列的外部連結）由部署腳本設定
 
+## 雲端版（Cloudflare）
+
+不需要 AWS，整個主站放在 Cloudflare 免費方案。一鍵部署：雙擊 [`quick_deploy_cloudflare\deploy.bat`](../quick_deploy_cloudflare/README.md)。
+後端是 `cloudflare/src/` 的 JavaScript（Workers 不能跑 Python 的 AI 套件），API 路徑與回應格式和 Python 版相同，
+前端與 Discord Cog 不用改。
+
+| 本機 / AWS | Cloudflare | 程式 |
+|---|---|---|
+| `server/routes.py` | Workers | `cloudflare/src/routes.js`、`index.js` |
+| SQLite / DynamoDB | D1（資料表與本機 SQLite 相同） | `cloudflare/src/store.js` |
+| `data/gallery` / S3 | KV | `/gallery/...` 由 Worker 提供 |
+| 執行緒池 / worker Lambda | Queues | 匯入分段執行（免費方案每次最多 50 個對外請求） |
+| 排程執行緒 / EventBridge | Cron Triggers（每小時） | |
+| RapidOCR | Workers AI（Llama 4 Scout 視覺模型）轉錄 → 同一套解析規則 | `cloudflare/src/ocr.js` |
+| Depth Anything V2（伺服器） | Depth Anything V2（**使用者瀏覽器**，transformers.js） | `frontend/depth_client.js` |
+| API Gateway 限流 | Rate Limiting（每 IP 每 10 秒 300 個；`/api/ping` 20 個） | |
+
+- 遊戲資料只維護 `server/games/` 這一份：部署時由 `cloudflare/export_games.py` 匯出成 `cloudflare/src/games.json`
+- 圖片上傳網址改成 Worker 自己簽的 HMAC 網址（5 分鐘有效，檔案類型不符回 403），行為同 S3 預簽名網址
+- 2.5D 第一次使用要在瀏覽器下載約 50MB 模型（之後有快取）；有 WebGPU 時一張約 2～4 秒
+- 刪除的作品檔案可能還會被讀到約 60 秒（KV 是最終一致）
+
 ## 新增遊戲或角色
 
 每款遊戲的設定都在 `server/games/{zzz,gi,hsr}.py`：角色列表、卡池規則（保底、常駐池名單）、官方 API 網址、
@@ -80,7 +102,8 @@ server/
   checkin.py        HoYoLAB 簽到與排程
   depth.py          2.5D 深度估計
   store.py          SQLite PK/SK 儲存
-frontend/           網頁
+frontend/           網頁（depth_client.js 只有 Cloudflare 版會載入）
+cloudflare/         Cloudflare Workers 版後端（JavaScript）與設定範本、遊戲資料匯出
 discord_cog/        discord.py Cog（hoyo_hub.py，/hoyo 指令群組）
 ```
 

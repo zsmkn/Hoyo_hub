@@ -105,6 +105,16 @@ function renderGameMenu() {
 }
 
 function applyMode(mode) {
+  state.mode = mode;
+  if (mode === "cloudflare") {
+    $("#mode-label").textContent = "Cloudflare 版";
+    $$(".where").forEach((el) => (el.textContent = "雲端"));
+    $("#footer-tech").textContent = "Cloudflare 版 · Workers · D1 · KV · Queues · Cron Triggers · Workers AI（OCR）· Depth Anything V2（瀏覽器端）";
+    $("#checkin-desc").innerHTML = "每天 <b>00:10（台灣時間）</b>起由 Cloudflare Cron Triggers 自動幫你在 HoYoLAB 簽到，失敗會每小時自動重試。";
+    $("#ocr-desc").innerHTML = "使用 Cloudflare Workers AI 視覺模型辨識，<b>支援繁體中文、簡體中文與英文介面</b>，遊戲語言不用切換。辨識結果可以手動修正後再匯入。";
+    $("#depth-desc").innerHTML = "上傳一張立繪，<b>你的瀏覽器</b>會用 AI 模型 <b>Depth Anything V2</b> 估計每個像素的深度（第一次使用需下載約 50MB 模型），再由 WebGL 依深度做視差位移，讓平面圖片「立體」起來。三款遊戲共用同一個作品庫。";
+    return;
+  }
   if (mode !== "cloud") return;
   $("#mode-label").textContent = "雲端版";
   $$(".where").forEach((el) => (el.textContent = "雲端"));
@@ -476,7 +486,36 @@ async function openWork(w) {
   } catch (e) { toast(e.message, true); }
 }
 
+/** Cloudflare 版：深度在瀏覽器計算（depth_client.js），算好再上傳三個檔案 */
+async function generateDepthClient(file) {
+  const status = (m) => setStatus("#depth-status", m, "run");
+  if (file.size > 10 * 1024 * 1024) throw new Error("圖片請小於 10MB");
+  status("載入 AI 模組…");
+  const { processImage } = await import("./depth_client.js");
+  const r = await processImage(file, status);
+  status("上傳作品…");
+  const form = new FormData();
+  form.append("title", $("#depth-title").value.trim());
+  form.append("public", String($("#depth-public").checked));
+  for (const k of ["width", "height", "elapsed"]) form.append(k, String(r[k]));
+  for (const k of ["image", "depth", "thumb"]) form.append(k, r[k], k);
+  const res = await fetch(API + "/api/depth/upload", { method: "POST", headers: { Authorization: "Bearer " + state.token }, body: form });
+  const work = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(work.error || `HTTP ${res.status}`);
+  return work;
+}
+
 async function generateDepth(file) {
+  if (state.mode === "cloudflare") {
+    try {
+      const work = await generateDepthClient(file);
+      setStatus("#depth-status", work.message, "ok");
+      $("#depth-title").value = "";
+      await openWork(work);
+      if (depth.gal === "mine") loadGallery();
+    } catch (e) { setStatus("#depth-status", e.message, "err"); }
+    return;
+  }
   try {
     setStatus("#depth-status", "上傳圖片…", "run");
     const jobId = await uploadImage(file, "depth", { title: $("#depth-title").value.trim(), public: $("#depth-public").checked }, 10);

@@ -14,7 +14,9 @@
 
 需要：[AWS CLI v2](https://aws.amazon.com/cli/)、[Git for Windows](https://git-scm.com/download/win)、[Python 3.12](https://www.python.org/downloads/)
 
-雙擊 **[`quick_start\deploy.bat`](quick_start/README.md)**，貼上 AWS 憑證，就會依序部署 3D 建模站與主站，完成後顯示網址。
+雙擊 **[`quick_deploy_aws\deploy.bat`](quick_deploy_aws/README.md)**，貼上 AWS 憑證，就會依序部署 3D 建模站與主站，完成後顯示網址。
+
+不想用 AWS？雙擊 **[`quick_deploy_cloudflare\deploy.bat`](quick_deploy_cloudflare/README.md)**，主站的所有功能都部署到 Cloudflare 免費方案（Workers、D1、KV、Queues、Workers AI），約 30 秒完成（需要 Node.js 與 `npm install -g wrangler`；3D 建模站只有 AWS 版）。
 
 > 在 PowerShell 打 `bash` 可能會叫到 WSL 的 bash（裡面沒有 Windows 版的 aws），請用 `.bat` 或 Git Bash 執行部署腳本。
 
@@ -119,7 +121,8 @@
 
 ```
 ZZZ_proxy_hub/ 主站（三款遊戲；本機版與雲端版共用程式碼），說明見其 README
-quick_start/   一鍵部署（3D 建模站 + 主站）
+quick_deploy_aws/   一鍵部署到 AWS（3D 建模站 + 主站）
+quick_deploy_cloudflare/  一鍵部署主站到 Cloudflare（不需要 AWS）
 backend/    Lambda 程式（Python 3.12，只用標準函式庫 + boto3）
   api.py        API 路由（HTTP API 進入點）
   worker.py     背景工作：網址匯入、S3→Textract OCR、初始資料
@@ -138,7 +141,7 @@ docs/       Discord Bot API 文件
 
 ## 單獨部署 3D 建模站
 
-需要：AWS CLI v2、Python 3、Git Bash。（一般建議直接用上面的 `quick_start`。）
+需要：AWS CLI v2、Python 3、Git Bash。（一般建議直接用上面的 `quick_deploy_aws`。）
 
 1. Learner Lab 按 **Start Lab** → **AWS Details** → 複製 credentials
 2. 寫入 profile：

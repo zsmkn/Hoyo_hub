@@ -1,13 +1,18 @@
 # ===== 機密：金鑰、憑證、部署結果（含 AWS 帳號 ID 與網址） =====
 **/deploy/.secrets
 **/deploy/outputs.env
-quick_start/credentials.txt
-quick_start/urls.txt
+quick_deploy_aws/credentials.txt
+quick_deploy_aws/urls.txt
+quick_deploy_cloudflare/.secrets
+quick_deploy_cloudflare/cloudflare.env
+quick_deploy_cloudflare/urls.txt
 .env
 *.pem
 
 # 部署時自動產生（內含實際的 API 網址）
 frontend/config.js
+ZZZ_proxy_hub/cloudflare/wrangler.toml
+ZZZ_proxy_hub/cloudflare/src/games.json
 
 # ===== 建置產物與本機執行資料 =====
 build/
@@ -15,14 +20,18 @@ build/
 .venv/
 venv/
 __pycache__/
+.wrangler/
+node_modules/
 *.pyc
 ZZZ_proxy_hub/data/
 ZZZ_proxy_hub/models/
 *.log
 
 # ===== 課堂用（入口網站含組員姓名、學號、照片；不屬於網站本身） =====
-portal/
-class_quick_start/
+portal_aws/
+portal_cloudflare/
+quick_deploy_class_aws/
+quick_deploy_cloudflare_class/
 docs/presentation.md
 docs/awesome_style.md
 
